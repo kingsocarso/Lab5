@@ -55,7 +55,7 @@ public class MorseDecoder {
         for (int binIndex = 0; binIndex < totalBinCount; binIndex++) {
             inputFile.readFrames(sampleBuffer, BIN_SIZE);
             for (double element : sampleBuffer) {
-                sum += element;
+                sum += Math.abs(element);
             }
             returnBuffer[binIndex] = sum;
             // Get the right number of samples from the inputFile
@@ -65,10 +65,13 @@ public class MorseDecoder {
     }
 
     /** Power threshold for power or no power. You may need to modify this value. */
-    private static final double POWER_THRESHOLD = 10;
+    private static final double POWER_THRESHOLD = 2;
 
     /** Bin threshold for dots or dashes. Related to BIN_SIZE. You may need to modify this value. */
-    private static final int DASH_BIN_COUNT = 8;
+    private static final int DASH_BIN_COUNT = 12;
+
+    /** Bin threshold for spaces. */
+    private static final int SPACE_BIN_COUNT = 8;
 
     /**
      * Convert power measurements to dots, dashes, and spaces.
@@ -82,7 +85,27 @@ public class MorseDecoder {
      * @return the Morse code string of dots, dashes, and spaces
      */
     private static String powerToDotDash(final double[] powerMeasurements) {
-        return "";
+        String result = "";
+        int k = 0, j = 0;
+        for (double measurement : powerMeasurements) {
+            if (measurement < POWER_THRESHOLD) {
+                j++;
+                if (k < DASH_BIN_COUNT && k != 0) {
+                    result += ".";
+                } else if (k >= DASH_BIN_COUNT) {
+                    result += "-";
+                }
+                k = 0;
+                j++;
+            } else {
+                if (j > SPACE_BIN_COUNT) {
+                    result += " ";
+                }
+                k++;
+                j = 0;
+            }
+        }
+        return result;
     }
 
     /**
